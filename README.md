@@ -1,0 +1,1 @@
+# Letterboxd Automated Local Backup Tool
