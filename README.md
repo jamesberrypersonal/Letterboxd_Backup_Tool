@@ -35,4 +35,4 @@ Pull requests always welcome, please push changes to dev branch, not main.
 
 ## License
 
-Project is licensed under the MIT License - see [here](doxs/LICENSE.txt) for full license.
+Project is licensed under the MIT License - see [here](docs/LICENSE.txt) for full license.
