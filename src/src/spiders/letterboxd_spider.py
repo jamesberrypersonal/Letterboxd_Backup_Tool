@@ -3,7 +3,7 @@ import scrapy
 import time
 
 
-# Spider class - crawls the 'films' page of the directed letterboxd user, extracting the titles of their
+# Spider class - crawls the films page of the directed letterboxd user, extracting the titles of their
 # watched films, and the rating they gave if any
 class LetterboxdSpider(scrapy.Spider):
 
@@ -18,6 +18,7 @@ class LetterboxdSpider(scrapy.Spider):
         super().__init__(**kwargs)
         self.user = user
         self.start_urls = ["https://letterboxd.com/" + user + "/films/"]
+        # TODO: sanitize user input
 
     # Spiders parse function for retrieving and processing data - outputs dictionary of films, with title and
     # rating keys (rating set to n/a if film not rated by user)
@@ -30,6 +31,7 @@ class LetterboxdSpider(scrapy.Spider):
             # at end of class attribute of a span element that may not exist (if user hasn't rated the film)
             rating = film.css("p.poster-viewingdata.-rated-and-liked > span").xpath("@class").get()
             if rating is not None:
+                # TODO: fix bug here stupid (ratings with half stars get processed as '1/2/10')
                 data['Rating'] = rating[-1] + "/10"
             else:
                 data['Rating'] = "n/a"
