@@ -15,23 +15,27 @@ class LetterboxdSpider(scrapy.Spider):
     # Arguments:
     #       -user: letterboxd account username to be crawled (Set to my own right now out bc I'm lazy while
     #                testing)
-    #       -pagetest: flag to indicate only want to crawl the first page of the users films - intended to
+    #       -page_test: flag to indicate only want to crawl the first page of the users films - intended to
     #                    speed up testing when tests don't depend on crawling all pages (Set to true right now
     #                    for same reason as above)
     # TODO: fix issue of args not being set
     # TODO: clean args before pushing to main
-    def __init__(self, user="fruityjames", pagetest=True, **kwargs):
+    def __init__(self, user="fruityjames", page_test=True, **kwargs):
         super().__init__(**kwargs)
-        self.page_test = pagetest
+        self.page_test = page_test
         self.user = LetterboxdSpider.sanitize_user(user)
         self.start_urls = ["https://letterboxd.com/" + user + "/films/"]
 
     # Spiders parse function for retrieving and processing data - outputs dictionary of films, with title and
     # rating keys (rating set to n/a if film not rated by user)
+    # TODO: Clean up commenting
     def parse(self, response):
 
         for film in response.css("li.poster-container"):
-            data = {'Title': film.css("img::attr(alt)").get(), 'Rating': "n/a", 'Liked': "No"}
+
+            data = {'Title': film.css("img::attr(alt)").get(), 'Rating': "n/a", 'Liked': "No",
+                    'Watched': "n/a"}
+
             # Messy section here due to how ratings are displayed on page - user rating and liked status
             # only present in a span element that may not exist (if user hasn't rated/liked the film) and
             # rating numeric value only present within class attribute of the span element
@@ -43,6 +47,12 @@ class LetterboxdSpider(scrapy.Spider):
                     data['Rating'] = rated.xpath("@class").get()[-1] + "/10"
                 if liked:
                     data['Liked'] = "Yes"
+            
+            url = self.start_urls[0] + data['Title']
+            film_info = response.follow(url, callback=self.parse_film)
+            data['Watched'] = film_info['Watched']
+            data['Director'] = film_info['Director']
+            data['Released'] = film_info['Released']
             yield data
 
         # Obtaining the next page (if it exists) to continue crawling - if page_test is set then skip (to
@@ -55,7 +65,13 @@ class LetterboxdSpider(scrapy.Spider):
                 time.sleep(5)
                 yield scrapy.Request(url, callback=self.parse)
 
+    # TODO: Implement film page parsing
+    def parse_film(self, response):
+
+        film_data = response.css('html').get() + self.user
+        yield film_data
+
+    # TODO: Implement user input sanitizing
     @staticmethod
-    # TODO: Implement input sanitizing
     def sanitize_user(user):
         return user
