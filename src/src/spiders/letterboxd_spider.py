@@ -47,10 +47,13 @@ class LetterboxdSpider(scrapy.Spider):
                     data['Rating'] = rated.xpath("@class").get()[-1] + "/10"
                 if liked:
                     data['Liked'] = "Yes"
-            
-            url = self.start_urls[0] + data['Title']
+                url = self.get_url(self.user + "/film/" + data['Title'].replace(" ", "-"))
+                watched = response.follow(url, callback=self.get_watchdate)
+                if watched:
+                    data['Watched'] = watched
+
+            url = self.get_url("/film/" + data['Title'].replace(" ", "-"))
             film_info = response.follow(url, callback=self.parse_film)
-            data['Watched'] = film_info['Watched']
             data['Director'] = film_info['Director']
             data['Released'] = film_info['Released']
             yield data
@@ -68,8 +71,36 @@ class LetterboxdSpider(scrapy.Spider):
     # TODO: Implement film page parsing
     def parse_film(self, response):
 
-        film_data = response.css('html').get() + self.user
-        yield film_data
+        film_info = {'Director': "n/a", 'Released': "n/a"}
+
+        attrs = response.css("section.film-header-lockup > p")
+        rel = attrs.css('a[href^="/films/"]::text').get()
+        dirs = attrs.css('a[href^="/director/"] span::text').getall()
+        if rel:
+            film_info['Released'] = rel
+        if dirs:
+            s = ", "
+            film_info['Director'] = s.join(dirs)
+        yield film_info
+
+    # TODO: Make sure yield stuff is working
+    def get_watchdate(self, response):
+
+        if not response.css('[class^="error"]'):
+            watchdate = response.css('p[class^="view-date"] a::text').getall()
+            if not watchdate:
+                yield 0
+            else:
+                s = " "
+                yield s.join(watchdate)
+        else:
+            yield 0
+
+    # Helper function to generate url strings
+    @staticmethod
+    def get_url(url_string):
+        url = "https://letterboxd.com/" + url_string
+        return url
 
     # TODO: Implement user input sanitizing
     @staticmethod
