@@ -3,8 +3,8 @@ import scrapy
 import time
 
 
-# Spider class - crawls the films page of the directed letterboxd user, extracting the titles of their
-# watched films, and the rating they gave if any
+# Spider class - crawls the films page of the directed letterboxd user, extracting the basic data of
+# their watched films, as well as user generated data (likes, ratings, watched date) if available
 class LetterboxdSpider(scrapy.Spider):
 
     # Variable declarations
@@ -26,15 +26,23 @@ class LetterboxdSpider(scrapy.Spider):
         self.user = LetterboxdSpider.sanitize_user(user)
         self.start_urls = ["https://letterboxd.com/" + user + "/films/"]
 
-    # Spiders parse function for retrieving and processing data - outputs dictionary of films, with title and
-    # rating keys (rating set to n/a if film not rated by user)
+    # Spiders parse function for retrieving and processing data - outputs dictionaries of film data for the
+    # individual films in user's watched films
     # TODO: Clean up commenting
     def parse(self, response):
 
+        # Loops through each film poster element displayed on user's watched films page
         for film in response.css("li.poster-container"):
 
+            # Output dictionary of film data
             data = {'Title': film.css("img::attr(alt)").get(), 'Rating': "n/a", 'Liked': "No",
                     'Watched': "n/a"}
+
+            # Other than title, have to crawl individual film page to obtain data on each film
+            url = self.get_url("/film/" + data['Title'].replace(" ", "-"))
+            film_info = response.follow(url, callback=self.parse_film)
+            data['Director'] = film_info['Director']
+            data['Released'] = film_info['Released']
 
             # Messy section here due to how ratings are displayed on page - user rating and liked status
             # only present in a span element that may not exist (if user hasn't rated/liked the film) and
@@ -48,14 +56,11 @@ class LetterboxdSpider(scrapy.Spider):
                 if liked:
                     data['Liked'] = "Yes"
                 url = self.get_url(self.user + "/film/" + data['Title'].replace(" ", "-"))
+                # Date user watched film not available on page, have to crawl individual film page
                 watched = response.follow(url, callback=self.get_watchdate)
                 if watched:
                     data['Watched'] = watched
 
-            url = self.get_url("/film/" + data['Title'].replace(" ", "-"))
-            film_info = response.follow(url, callback=self.parse_film)
-            data['Director'] = film_info['Director']
-            data['Released'] = film_info['Released']
             yield data
 
         # Obtaining the next page (if it exists) to continue crawling - if page_test is set then skip (to
@@ -69,6 +74,7 @@ class LetterboxdSpider(scrapy.Spider):
                 yield scrapy.Request(url, callback=self.parse)
 
     # TODO: Implement film page parsing
+    # Function to parse individual film pages and extract the directors and release date
     def parse_film(self, response):
 
         film_info = {'Director': "n/a", 'Released': "n/a"}
@@ -84,6 +90,7 @@ class LetterboxdSpider(scrapy.Spider):
         yield film_info
 
     # TODO: Make sure yield stuff is working
+    # Function to extract date user watched film, if available
     def get_watchdate(self, response):
 
         if not response.css('[class^="error"]'):
@@ -102,6 +109,8 @@ class LetterboxdSpider(scrapy.Spider):
         url = "https://letterboxd.com/" + url_string
         return url
 
+    # Helper function to sanitize initial user input (ensure corresponds to an actually existing
+    # letterboxd user
     # TODO: Implement user input sanitizing
     @staticmethod
     def sanitize_user(user):
