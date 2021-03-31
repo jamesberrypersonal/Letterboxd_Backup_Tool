@@ -1,6 +1,7 @@
 # imports
 import scrapy
 import time
+import urllib
 
 
 # Spider class - crawls the films page of the directed letterboxd user, extracting the basic data of
@@ -19,7 +20,7 @@ class LetterboxdSpider(scrapy.Spider):
     #                    speed up testing when tests don't depend on crawling all pages (Set to true right now
     #                    for same reason as above)
     # TODO: fix issue of args not being set
-    # TODO: clean args before pushing to main
+    # TODO: clean args before release
     def __init__(self, user="fruityjames", page_test=True, **kwargs):
         super().__init__(**kwargs)
         self.page_test = page_test
@@ -93,4 +94,9 @@ class LetterboxdSpider(scrapy.Spider):
     # TODO: Implement user input sanitizing
     @staticmethod
     def sanitize_user(user):
-        return user
+
+        # Sanitize input (to ensure not malicious)
+        safe_user = urllib.parse(user)
+
+        # Check if input corresponds to a valid letterboxd user
+        return safe_user
