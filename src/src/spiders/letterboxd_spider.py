@@ -28,7 +28,6 @@ class LetterboxdSpider(scrapy.Spider):
 
     # Spiders parse function for retrieving and processing data - outputs dictionaries of film data for the
     # individual films in user's watched films
-    # TODO: Clean up commenting
     def parse(self, response):
 
         # Loops through each film poster element displayed on user's watched films page
