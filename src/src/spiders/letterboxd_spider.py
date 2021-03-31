@@ -37,12 +37,6 @@ class LetterboxdSpider(scrapy.Spider):
             data = {'Title': film.css("img::attr(alt)").get(), 'Rating': "n/a", 'Liked': "No",
                     'Watched': "n/a"}
 
-            # Other than title, have to crawl individual film page to obtain data on each film
-            url = self.get_url("/film/" + data['Title'].replace(" ", "-"))
-            film_info = response.follow(url, callback=self.parse_film)
-            data['Director'] = film_info['Director']
-            data['Released'] = film_info['Released']
-
             # Messy section here due to how ratings are displayed on page - user rating and liked status
             # only present in a span element that may not exist (if user hasn't rated/liked the film) and
             # rating numeric value only present within class attribute of the span element
@@ -87,20 +81,6 @@ class LetterboxdSpider(scrapy.Spider):
             s = ", "
             film_info['Director'] = s.join(dirs)
         yield film_info
-
-    # TODO: Make sure yield stuff is working
-    # Function to extract date user watched film, if available
-    def get_watchdate(self, response):
-
-        if not response.css('[class^="error"]'):
-            watchdate = response.css('p[class^="view-date"] a::text').getall()
-            if not watchdate:
-                yield 0
-            else:
-                s = " "
-                yield s.join(watchdate)
-        else:
-            yield 0
 
     # Helper function to generate url strings
     @staticmethod
