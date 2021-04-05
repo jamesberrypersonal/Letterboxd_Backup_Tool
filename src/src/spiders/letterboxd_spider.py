@@ -1,7 +1,7 @@
 # imports
 import scrapy
 import time
-import urllib
+import urllib.parse as parse
 
 
 # Spider class - crawls the films page of the directed letterboxd user, extracting the basic data of
@@ -19,9 +19,7 @@ class LetterboxdSpider(scrapy.Spider):
     #       -page_test: flag to indicate only want to crawl the first page of the users films - intended to
     #                    speed up testing when tests don't depend on crawling all pages (Set to true right now
     #                    for same reason as above)
-    # TODO: fix issue of args not being set
-    # TODO: clean args before release
-    def __init__(self, user="fruityjames", page_test=True, **kwargs):
+    def __init__(self, user='', page_test=False, **kwargs):
         super().__init__(**kwargs)
         self.page_test = page_test
         self.user = LetterboxdSpider.sanitize_user(user)
@@ -38,9 +36,10 @@ class LetterboxdSpider(scrapy.Spider):
             data = {'Title': film.css("img::attr(alt)").get(), 'Rating': "n/a", 'Liked': "No",
                     'Watched': "n/a"}
 
-            # Messy section here due to how ratings are displayed on page - user rating and liked status
-            # only present in a span element that may not exist (if user hasn't rated/liked the film) and
-            # rating numeric value only present within class attribute of the span element
+            # Extract data for film present on page
+            # (Slightly messy if statements here due to awkward display of user rating/like data on page -
+            # info stored only in class attribute of elements that may or may not exist, within a span
+            # element that also may or may not exist)
             rate = film.css("p.poster-viewingdata.-rated-and-liked > span")
             if rate:
                 rated = rate.css('[class^="rating"]')
@@ -49,11 +48,12 @@ class LetterboxdSpider(scrapy.Spider):
                     data['Rating'] = rated.xpath("@class").get()[-1] + "/10"
                 if liked:
                     data['Liked'] = "Yes"
-                url = self.get_url(self.user + "/film/" + data['Title'].replace(" ", "-"))
+                # TODO: Get individual film page parsing working ASAP
+                # url = self.get_url(self.user + "/film/" + data['Title'].replace(" ", "-"))
                 # Date user watched film not available on page, have to crawl individual film page
-                watched = response.follow(url, callback=self.get_watchdate)
-                if watched:
-                    data['Watched'] = watched
+                # watched = response.follow(url, callback=self.get_watchdate)
+                # if watched:
+                #     data['Watched'] = watched
 
             yield data
 
@@ -91,12 +91,13 @@ class LetterboxdSpider(scrapy.Spider):
 
     # Helper function to sanitize initial user input (ensure corresponds to an actually existing
     # letterboxd user
-    # TODO: Implement user input sanitizing
+    # TODO: Implement username validity checking, make sure sanitizing actually works
     @staticmethod
     def sanitize_user(user):
 
         # Sanitize input (to ensure not malicious)
-        safe_user = urllib.parse(user)
-
+        safe_user = parse.quote(user)
         # Check if input corresponds to a valid letterboxd user
+        # TODO: Add validation here
+
         return safe_user
