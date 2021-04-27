@@ -1,13 +1,12 @@
 # imports
 import scrapy
 import time
-import urllib.parse as parse
+from src.src import utils
 
 
 # Spider class - crawls the films page of the directed letterboxd user, extracting the basic data of
 # their watched films, as well as user generated data (likes, ratings, watched date) if available
 class LetterboxdSpider(scrapy.Spider):
-
     # Variable declarations
     name = "letterboxd"
     allowed_domains = ["letterboxd.com"]
@@ -22,7 +21,7 @@ class LetterboxdSpider(scrapy.Spider):
     def __init__(self, user='', page_test=False, **kwargs):
         super().__init__(**kwargs)
         self.page_test = page_test
-        self.user = LetterboxdSpider.sanitize_user(user)
+        self.user = utils.sanitize_user(user)
         self.start_urls = ["https://letterboxd.com/" + user + "/films/"]
 
     # Spiders parse function for retrieving and processing data - outputs dictionaries of film data for the
@@ -49,7 +48,7 @@ class LetterboxdSpider(scrapy.Spider):
                 if liked:
                     data['Liked'] = "Yes"
                 # TODO: Get individual film page parsing working ASAP
-                # url = self.get_url(self.user + "/film/" + data['Title'].replace(" ", "-"))
+                # url = utils.get_url(self.user + "/film/" + data['Title'].replace(" ", "-"))
                 # Date user watched film not available on page, have to crawl individual film page
                 # watched = response.follow(url, callback=self.get_watchdate)
                 # if watched:
@@ -82,22 +81,3 @@ class LetterboxdSpider(scrapy.Spider):
             s = ", "
             film_info['Director'] = s.join(dirs)
         yield film_info
-
-    # Helper function to generate url strings
-    @staticmethod
-    def get_url(url_string):
-        url = "https://letterboxd.com/" + url_string
-        return url
-
-    # Helper function to sanitize initial user input (ensure corresponds to an actually existing
-    # letterboxd user
-    # TODO: Implement username validity checking, make sure sanitizing actually works
-    @staticmethod
-    def sanitize_user(user):
-
-        # Sanitize input (to ensure not malicious)
-        safe_user = parse.quote(user)
-        # Check if input corresponds to a valid letterboxd user
-        # TODO: Add validation here
-
-        return safe_user
