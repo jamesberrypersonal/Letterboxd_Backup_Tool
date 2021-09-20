@@ -3,9 +3,14 @@ Utils module to hold helper functions used across project
 """
 import urllib.parse as parse
 
+# Constants
 
+LETTERBOXD = "letterboxd"
 LETTERBOXD_URL = "https://letterboxd.com/"
+LETTERBOXD_DOMAIN = "letterboxd.com"
 
+
+# Util functions
 
 def get_url(url_string):
     """

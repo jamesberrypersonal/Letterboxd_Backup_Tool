@@ -3,7 +3,7 @@ Module containing main letterboxd Scrapy spider and associated functions
 """
 from time import sleep
 from scrapy import Request, Spider
-from src.src.utils import sanitize_user
+from src.src.utils import LETTERBOXD, LETTERBOXD_DOMAIN, LETTERBOXD_URL, sanitize_user
 
 
 class LetterboxdSpider(Spider):
@@ -12,8 +12,8 @@ class LetterboxdSpider(Spider):
     available
     """
 
-    name = "letterboxd"
-    allowed_domains = ["letterboxd.com"]
+    name = LETTERBOXD
+    allowed_domains = [LETTERBOXD_DOMAIN]
 
     # TODO: Remove page_test param
     def __init__(self, user='', page_test=False, **kwargs):
@@ -28,7 +28,7 @@ class LetterboxdSpider(Spider):
         super().__init__(**kwargs)
         self.page_test = page_test
         self.user = sanitize_user(user)
-        self.start_urls = ["https://letterboxd.com/" + user + "/films/"]
+        self.start_urls = [LETTERBOXD_URL + user + "/films/"]
 
     def parse(self, response, **kwargs):
         """
