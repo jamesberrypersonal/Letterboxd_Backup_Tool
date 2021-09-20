@@ -1,22 +1,34 @@
-# Utilities file to hold helper functions used across the entire project
+"""
+Utils module to hold helper functions used across project
+"""
 import urllib.parse as parse
 
 
-# Helper function to generate letterboxd urls
-def get_url(url_string):
+LETTERBOXD_URL = "https://letterboxd.com/"
 
-    url = "https://letterboxd.com/" + url_string + "/"
+
+def get_url(url_string):
+    """
+    Generate letterboxd url from input string
+
+    :param url_string: url params to include off of base letterboxd url
+    :return: formatted letterboxd url
+    """
+
+    url = LETTERBOXD_URL + url_string + "/"
     return url
 
 
-# Helper function to sanitize initial input of username, and ensure corresponds to an actually existing
-# letterboxd user
 def sanitize_user(user):
+    """
+    Sanitize initial input of username, and ensure corresponds to an actually existing letterboxd user
 
-    # Sanitize input (to ensure not malicious)
+    :param user: Inputted username
+    :return: Sanitized username
+    """
+
     safe_user = parse.quote(user)
 
-    # Check if input corresponds to a valid letterboxd user
     # TODO: Add user validation here
     valid_user = safe_user
 
