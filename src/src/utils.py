@@ -12,6 +12,7 @@ LETTERBOXD_DOMAIN = "letterboxd.com"
 
 # Util functions
 
+
 def get_url(url_string):
     """
     Generate letterboxd url from input string

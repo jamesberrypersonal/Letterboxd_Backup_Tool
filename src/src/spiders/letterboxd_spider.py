@@ -2,8 +2,11 @@
 Module containing main letterboxd Scrapy spider and associated functions
 """
 from time import sleep
+
 from scrapy import Request, Spider
-from src.src.utils import LETTERBOXD, LETTERBOXD_DOMAIN, LETTERBOXD_URL, sanitize_user
+
+from src.src.utils import (LETTERBOXD, LETTERBOXD_DOMAIN, LETTERBOXD_URL,
+                           sanitize_user)
 
 
 class LetterboxdSpider(Spider):
@@ -16,7 +19,7 @@ class LetterboxdSpider(Spider):
     allowed_domains = [LETTERBOXD_DOMAIN]
 
     # TODO: Remove page_test param
-    def __init__(self, user='', page_test=False, **kwargs):
+    def __init__(self, user="", page_test=False, **kwargs):
         """
         Class constructor
 
@@ -39,8 +42,12 @@ class LetterboxdSpider(Spider):
         # Loops through each film poster element displayed on user's watched films page
         for film in response.css("li.poster-container"):
 
-            data = {'Title': film.css("img::attr(alt)").get(), 'Rating': "n/a", 'Liked': "No",
-                    'Watched': "n/a"}
+            data = {
+                "Title": film.css("img::attr(alt)").get(),
+                "Rating": "n/a",
+                "Liked": "No",
+                "Watched": "n/a",
+            }
 
             # Slightly messy if statements here due to awkward display of user rating/like data on page -
             # info stored only in class attribute of elements that may or may not exist, within a span
@@ -50,9 +57,9 @@ class LetterboxdSpider(Spider):
                 rated = rate.css('[class^="rating"]')
                 liked = rate.css('[class^="like"]')
                 if rated:
-                    data['Rating'] = rated.xpath("@class").get()[-1] + "/10"
+                    data["Rating"] = rated.xpath("@class").get()[-1] + "/10"
                 if liked:
-                    data['Liked'] = "Yes"
+                    data["Liked"] = "Yes"
                 # TODO: Get individual film page parsing working
                 # url = utils.get_url(self.user + "/film/" + data['Title'].replace(" ", "-"))
                 # Date user watched film not available on page, have to crawl individual film page
@@ -80,14 +87,14 @@ def parse_film(response):
     :return: Dictionary containing film data
     """
 
-    film_info = {'Director': "n/a", 'Released': "n/a"}
+    film_info = {"Director": "n/a", "Released": "n/a"}
 
     attrs = response.css("section.film-header-lockup > p")
     rel = attrs.css('a[href^="/films/"]::text').get()
     dirs = attrs.css('a[href^="/director/"] span::text').getall()
     if rel:
-        film_info['Released'] = rel
+        film_info["Released"] = rel
     if dirs:
         s = ", "
-        film_info['Director'] = s.join(dirs)
+        film_info["Director"] = s.join(dirs)
     yield film_info
